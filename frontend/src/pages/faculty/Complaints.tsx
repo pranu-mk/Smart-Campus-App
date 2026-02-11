@@ -1,0 +1,319 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { Search, Eye, Edit, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import ComplaintDetailModal from "@/components/modals/faculty/ComplaintDetailModal";
+import type { Theme } from "@/pages/Index";
+
+// FIXED INTERFACE: Synchronized with Modal expectations and DB ENUMs
+export interface Complaint {
+  id: string;
+  studentName: string;
+  department: string;
+  type: string;
+  priority: "Low" | "Medium" | "High" | "Critical" | string; // Allows literal union + string fallback
+  date: string;
+  status: "Pending" | "In Progress" | "In-Progress" | "Resolved" | "Rejected" | "Escalated" | "Closed" | string;
+  description?: string;
+}
+
+interface ComplaintsProps {
+  theme?: Theme;
+}
+
+const priorityColors: any = {
+  Low: { bg: "#ECFDF5", text: "#059669", border: "#6EE7B7" },
+  Medium: { bg: "#FFFBEB", text: "#D97706", border: "#FCD34D" },
+  High: { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5" },
+  Critical: { bg: "#7F1D1D", text: "#FFFFFF", border: "#991B1B" },
+  unknown: { bg: "#F3F4F6", text: "#6B7280", border: "#D1D5DB" }
+};
+
+const statusColors: any = {
+  Pending: { bg: "#FFFBEB", text: "#D97706", border: "#FCD34D" },
+  "In Progress": { bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD" },
+  "In-Progress": { bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD" },
+  Resolved: { bg: "#ECFDF5", text: "#059669", border: "#6EE7B7" },
+  Rejected: { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5" },
+  Escalated: { bg: "#FDF2F8", text: "#DB2777", border: "#F9A8D4" },
+  Closed: { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
+  unknown: { bg: "#F3F4F6", text: "#6B7280", border: "#D1D5DB" }
+};
+
+const ITEMS_PER_PAGE = 5;
+
+const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [editingComplaint, setEditingComplaint] = useState<Complaint | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
+
+  const isDark = theme === "dark";
+  const isFancy = theme === "fancy";
+  const cardBg = isDark || isFancy ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200";
+  const textPrimary = isDark || isFancy ? "text-gray-100" : "text-gray-800";
+  const textSecondary = isDark || isFancy ? "text-gray-400" : "text-gray-500";
+  const inputClass = isDark || isFancy ? "bg-gray-700 border-gray-600 text-gray-100" : "bg-gray-50 border-gray-200";
+  const tableHeaderBg = isDark || isFancy ? "bg-gray-700" : "bg-gray-50";
+  const tableRowHover = isDark || isFancy ? "hover:bg-gray-700" : "hover:bg-gray-50";
+
+  const fetchComplaints = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/api/faculty/assigned-complaints", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) {
+        setComplaints(res.data.data || []);
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to load assigned complaints", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const handleActionSubmit = async (complaintId: string, actionData: { status: string, response: string, note: string, priority?: string }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`http://localhost:5000/api/faculty/assigned-complaints/${complaintId}`, 
+        { 
+          status: actionData.status, 
+          priority: actionData.priority, 
+          facultyResponse: actionData.response, 
+          internalNote: actionData.note 
+        },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      
+      if (res.data.success) {
+        toast({ title: "Success", description: "Complaint updated successfully." });
+        setSelectedComplaint(null);
+        setEditingComplaint(null);
+        fetchComplaints(); 
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to submit action", variant: "destructive" });
+    }
+  };
+
+  const filteredComplaints = complaints.filter((complaint) => {
+    const matchesSearch = 
+      (complaint.studentName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (complaint.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (complaint.type || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || complaint.status === statusFilter;
+    const matchesPriority = priorityFilter === "all" || complaint.priority === priorityFilter;
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
+  const totalPages = Math.ceil(filteredComplaints.length / ITEMS_PER_PAGE);
+  const paginatedComplaints = filteredComplaints.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-enter space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className={`text-2xl font-bold ${textPrimary}`}>Assigned Complaints</h1>
+          <p className={`mt-1 ${textSecondary}`}>Manage and resolve student complaints</p>
+        </div>
+      </div>
+
+      <div className={`rounded-xl p-4 shadow-sm ${cardBg}`}>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${textSecondary}`} />
+            <Input
+              placeholder="Search by ID, student name, or type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`pl-10 ${inputClass}`}
+            />
+          </div>
+          <div className="flex gap-3">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={`w-[150px] ${inputClass}`}><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent className={cardBg}>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className={`w-[150px] ${inputClass}`}><SelectValue placeholder="Priority" /></SelectTrigger>
+              <SelectContent className={cardBg}>
+                <SelectItem value="all">All Priority</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className={`rounded-xl overflow-hidden shadow-sm ${cardBg}`}>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className={`${tableHeaderBg} border-b ${isDark || isFancy ? "border-gray-600" : "border-gray-200"}`}>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Complaint ID</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Student Name</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Department</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Type</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Priority</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Date</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Status</th>
+                <th className={`px-4 py-3 text-left text-xs font-semibold uppercase ${textSecondary}`}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedComplaints.length === 0 ? (
+                <tr><td colSpan={8} className={`px-4 py-8 text-center ${textSecondary}`}>No complaints assigned to you.</td></tr>
+              ) : (
+                paginatedComplaints.map((complaint) => {
+                  const pStyle = priorityColors[complaint.priority] || priorityColors.unknown;
+                  const sStyle = statusColors[complaint.status] || statusColors.unknown;
+                  
+                  return (
+                    <tr key={complaint.id} className={`border-b ${isDark || isFancy ? "border-gray-700" : "border-gray-100"} ${tableRowHover} transition-colors`}>
+                      <td className={`px-4 py-4 font-mono ${isDark || isFancy ? "text-blue-400" : "text-blue-600"}`}>{complaint.id}</td>
+                      <td className={`px-4 py-4 font-medium ${textPrimary}`}>{complaint.studentName}</td>
+                      <td className={`px-4 py-4 ${textSecondary}`}>{complaint.department}</td>
+                      <td className={`px-4 py-4 ${textPrimary}`}>{complaint.type}</td>
+                      <td className="px-4 py-4">
+                        <Badge variant="outline" style={{ backgroundColor: pStyle.bg, color: pStyle.text, borderColor: pStyle.border }}>{complaint.priority}</Badge>
+                      </td>
+                      <td className={`px-4 py-4 ${textSecondary}`}>{complaint.date}</td>
+                      <td className="px-4 py-4">
+                        <Badge variant="outline" style={{ backgroundColor: sStyle.bg, color: sStyle.text, borderColor: sStyle.border }}>{complaint.status}</Badge>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-1">
+                          <button className={`p-2 rounded-md transition-colors ${isDark || isFancy ? "text-gray-400 hover:text-blue-400" : "text-gray-500 hover:text-blue-600"}`} onClick={() => setSelectedComplaint(complaint)}><Eye className="w-4 h-4" /></button>
+                          <button className={`p-2 rounded-md transition-colors ${isDark || isFancy ? "text-gray-400 hover:text-purple-400" : "text-gray-500 hover:text-purple-600"}`} onClick={() => setEditingComplaint(complaint)}><Edit className="w-4 h-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className={`flex items-center justify-between px-4 py-3 border-t ${isDark || isFancy ? "border-gray-700 bg-gray-700" : "border-gray-200 bg-gray-50"}`}>
+          <p className={`text-sm ${textSecondary}`}>
+            Showing {filteredComplaints.length === 0 ? 0 : ((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredComplaints.length)} of {filteredComplaints.length} complaints
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}><ChevronLeft className="w-4 h-4" /></Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages || totalPages === 0}><ChevronRight className="w-4 h-4" /></Button>
+          </div>
+        </div>
+      </div>
+
+      {selectedComplaint && (
+        <ComplaintDetailModal 
+          complaint={selectedComplaint as any} // Forced cast to bypass local union strictness
+          isOpen={!!selectedComplaint} 
+          onClose={() => setSelectedComplaint(null)} 
+          onSubmit={(data: any) => handleActionSubmit(selectedComplaint.id, data)}
+        />
+      )}
+
+      <Dialog open={!!editingComplaint} onOpenChange={() => setEditingComplaint(null)}>
+        <DialogContent className={isDark || isFancy ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}>
+          <DialogHeader>
+            <DialogTitle className={textPrimary}>Update Status: {editingComplaint?.id}</DialogTitle>
+          </DialogHeader>
+          {editingComplaint && (
+            <div className="space-y-4 pt-4">
+              <div>
+                <label className={`text-sm mb-2 block ${textSecondary}`}>Status</label>
+                <Select value={editingComplaint.status} onValueChange={(value: any) => setEditingComplaint({...editingComplaint, status: value})}>
+                  <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+                  <SelectContent className={cardBg}>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Resolved">Resolved</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className={`text-sm mb-2 block ${textSecondary}`}>Priority</label>
+                <Select value={editingComplaint.priority} onValueChange={(value: any) => setEditingComplaint({...editingComplaint, priority: value})}>
+                  <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+                  <SelectContent className={cardBg}>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" className="flex-1" onClick={() => setEditingComplaint(null)}>Cancel</Button>
+                <Button 
+                  className="flex-1 bg-blue-600 text-white" 
+                  onClick={() => handleActionSubmit(editingComplaint.id, { 
+                    status: editingComplaint.status, 
+                    priority: editingComplaint.priority, 
+                    response: "", 
+                    note: "" 
+                  })}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Complaints;

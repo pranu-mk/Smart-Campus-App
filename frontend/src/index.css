@@ -1,0 +1,368 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Light Theme - Professional Blue */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 270 50% 95%;
+    --secondary-foreground: 222 47% 11%;
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    --accent: 270 60% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    
+    --radius: 0.75rem;
+    
+    /* Campus Canvas Colors - Light Theme */
+    --stat-blue: 226 65% 59%;
+    --stat-yellow: 43 91% 65%;
+    --stat-orange: 28 88% 59%;
+    --stat-green: 147 41% 50%;
+    
+    --text-heading: 220 13% 18%;
+    --text-body: 220 9% 46%;
+    --bg-primary: 210 100% 98%;
+    --card-bg: 0 0% 100%;
+  }
+
+  .dark {
+    /* Dark Theme - Navy with Blue-Purple */
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 12%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 8%;
+    
+    --secondary: 270 30% 20%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 270 50% 50%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 217 91% 60%;
+    
+    /* Dark Theme Custom Colors */
+    --stat-blue: 226 65% 59%;
+    --stat-yellow: 43 91% 65%;
+    --stat-orange: 28 88% 59%;
+    --stat-green: 147 41% 50%;
+    
+    --text-heading: 210 40% 98%;
+    --text-body: 210 40% 85%;
+    --bg-primary: 222 47% 10%;
+    --card-bg: 222 47% 14%;
+  }
+
+  .fancy {
+    /* Fancy Theme - Gradients & Glassmorphism */
+    --background: 230 25% 12%;
+    --foreground: 210 40% 98%;
+    
+    --card: 230 30% 18% / 0.6;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 230 30% 18% / 0.8;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 250 85% 65%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 200 80% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 230 25% 20%;
+    --muted-foreground: 220 15% 70%;
+    
+    --accent: 280 70% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 250 30% 30%;
+    --input: 230 30% 25%;
+    --ring: 250 85% 65%;
+    
+    /* Fancy Theme Custom Colors */
+    --stat-blue: 226 65% 59%;
+    --stat-yellow: 43 91% 65%;
+    --stat-orange: 28 88% 59%;
+    --stat-green: 147 41% 50%;
+    
+    --text-heading: 210 40% 98%;
+    --text-body: 210 40% 85%;
+    --bg-primary: 230 25% 14%;
+    --card-bg: 230 30% 18%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    transition: background-color 0.5s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer components {
+  /* ========== DASHBOARD BACKGROUND ========== */
+  .dashboard-bg {
+    background: linear-gradient(135deg, #f3f6fd 0%, #e8eef7 100%);
+  }
+
+  .glass-card {
+    @apply bg-card backdrop-blur-xl border border-border/50 rounded-2xl;
+    box-shadow: 0 2px 12px 0 rgba(79, 111, 220, 0.08);
+  }
+  
+  .light .glass-card {
+    box-shadow: 0 4px 16px 0 rgba(79, 111, 220, 0.1);
+    border: 1px solid rgba(79, 111, 220, 0.12);
+  }
+  
+  .fancy .glass-card {
+    background: linear-gradient(135deg, 
+      hsl(var(--card)) 0%, 
+      hsl(230 30% 22% / 0.4) 100%
+    );
+    border: 1px solid hsl(var(--border) / 0.3);
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, 
+      hsl(var(--text-gradient-from)) 0%, 
+      hsl(var(--text-gradient-to)) 100%
+    );
+  }
+  .text-gradient {
+  background: linear-gradient(to right, #4f6fdc, #9333ea);
+  -webkit-background-clip: text; /* Required for Chrome/Safari */
+  background-clip: text;
+  color: transparent;
+  display: inline-block; /* Helps prevent clipping issues in some browsers */
+}
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl font-semibold text-primary-foreground;
+    background: linear-gradient(135deg, 
+      hsl(var(--primary)) 0%, 
+      hsl(var(--accent)) 100%
+    );
+    box-shadow: 0 4px 15px hsl(var(--glow-color) / 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px hsl(var(--glow-color) / 0.4);
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl font-semibold border-2 border-primary text-primary bg-transparent;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-primary text-primary-foreground;
+    transform: translateY(-2px);
+  }
+
+  .nav-link {
+    @apply relative px-4 py-2 font-medium text-foreground/80 transition-colors duration-300;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-1/2 w-0 h-0.5 bg-primary transition-all duration-300;
+    transform: translateX(-50%);
+  }
+
+  .nav-link:hover {
+    @apply text-primary;
+  }
+
+  .nav-link:hover::after {
+    @apply w-3/4;
+  }
+
+  .stat-card {
+    @apply glass-card p-6 text-center;
+  }
+
+  .service-card {
+    @apply glass-card p-6 flex flex-col items-center gap-4 cursor-pointer;
+    transition: all 0.3s ease;
+  }
+
+  .service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px hsl(var(--glow-color) / 0.2);
+  }
+
+  .role-card {
+    @apply glass-card p-8 text-center cursor-pointer;
+    transition: all 0.3s ease;
+  }
+
+  .role-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 15px 35px hsl(var(--glow-color) / 0.25);
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder-muted-foreground;
+    transition: all 0.3s ease;
+  }
+
+  .input-field:focus {
+    @apply outline-none ring-2 ring-primary border-transparent;
+    box-shadow: 0 0 20px hsl(var(--glow-color) / 0.2);
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-background/80 backdrop-blur-sm z-50;
+  }
+
+  .section-heading {
+    @apply text-3xl md:text-4xl font-bold mb-4;
+  }
+
+  .section-subheading {
+    @apply text-muted-foreground text-lg max-w-2xl mx-auto;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ========== STAT CARD COLORS ========== */
+  .stat-card-blue {
+    background: linear-gradient(135deg, #4f6fdc 0%, #5b7cfa 100%);
+    box-shadow: 0 8px 24px rgba(79, 111, 220, 0.2);
+  }
+
+  .stat-card-yellow {
+    background: linear-gradient(135deg, #f6c453 0%, #f7d067 100%);
+    box-shadow: 0 8px 24px rgba(246, 196, 83, 0.2);
+  }
+
+  .stat-card-orange {
+    background: linear-gradient(135deg, #f39c3d 0%, #f5ab55 100%);
+    box-shadow: 0 8px 24px rgba(243, 156, 61, 0.2);
+  }
+
+  .stat-card-green {
+    background: linear-gradient(135deg, #49b675 0%, #5cc485 100%);
+    box-shadow: 0 8px 24px rgba(73, 182, 117, 0.2);
+  }
+
+  /* ========== BADGE COLORS ========== */
+  .badge-pending {
+    background-color: #f6c453;
+    color: #1f2937;
+  }
+
+  .badge-progress {
+    background-color: #f39c3d;
+    color: white;
+  }
+
+  .badge-resolved {
+    background-color: #49b675;
+    color: white;
+  }
+
+  /* ========== LIGHT THEME OPTIMIZATIONS ========== */
+  .light .glass-card {
+    transition: all 0.3s ease;
+  }
+
+  .light .glass-card:hover {
+    box-shadow: 0 8px 24px 0 rgba(79, 111, 220, 0.15);
+    transform: translateY(-2px);
+  }
+
+  /* Light theme quick action cards */
+  .light a.glass-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f9ff 100%);
+  }
+
+  .light a.glass-card:hover {
+    background: linear-gradient(135deg, #ffffff 0%, #eef3ff 100%);
+  }
+
+  /* ========== DARK THEME OPTIMIZATIONS ========== */
+  .dark .glass-card {
+    transition: all 0.3s ease;
+  }
+
+  .dark .glass-card:hover {
+    box-shadow: 0 8px 24px 0 rgba(79, 111, 220, 0.2);
+    transform: translateY(-2px);
+  }
+
+  /* ========== FANCY THEME OPTIMIZATIONS ========== */
+  .fancy .stat-card-blue:hover,
+  .fancy .stat-card-yellow:hover,
+  .fancy .stat-card-orange:hover,
+  .fancy .stat-card-green:hover {
+    transform: translateY(-4px);
+    filter: brightness(1.1);
+  }
+}
