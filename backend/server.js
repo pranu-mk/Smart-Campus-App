@@ -6,8 +6,8 @@ const app = express();
 
 // --- FIXED CORS CONFIGURATION ---
 app.use(cors({
-    origin: 'http://localhost:8080', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], 
+    origin: ['http://localhost:8080',  "https://smart-campus-app.vercel.app"],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], 
     allowedHeaders: ['Content-Type', 'Authorization']
 })); 
 
