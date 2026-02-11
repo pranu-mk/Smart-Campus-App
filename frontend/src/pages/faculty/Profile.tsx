@@ -56,7 +56,7 @@ const Profile = ({ theme = "dark" }: ProfileProps) => {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/faculty/profile", {
+      const response = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/profile", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
@@ -94,7 +94,7 @@ const Profile = ({ theme = "dark" }: ProfileProps) => {
         photo: updatedPhoto || profile.photo
       };
 
-      const response = await axios.put("http://localhost:5000/api/faculty/update-profile", payload, {
+      const response = await axios.put("https://smart-campus-backend-app.onrender.com/api/faculty/update-profile", payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -129,7 +129,7 @@ const Profile = ({ theme = "dark" }: ProfileProps) => {
     }
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post("http://localhost:5000/api/faculty/change-password", {
+      const response = await axios.post("https://smart-campus-backend-app.onrender.com/api/faculty/change-password", {
         currentPassword: passwords.current,
         newPassword: passwords.new
       }, {

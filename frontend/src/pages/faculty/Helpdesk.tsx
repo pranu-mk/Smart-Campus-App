@@ -74,7 +74,7 @@ const Helpdesk = ({ theme = "dark" }: { theme?: string }) => {
  const fetchTickets = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/helpdesk/tickets", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/helpdesk/tickets", {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -107,7 +107,7 @@ const Helpdesk = ({ theme = "dark" }: { theme?: string }) => {
     }
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/faculty/helpdesk/tickets", newTicket, {
+      const res = await axios.post("https://smart-campus-backend-app.onrender.com/api/faculty/helpdesk/tickets", newTicket, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -125,7 +125,7 @@ const Helpdesk = ({ theme = "dark" }: { theme?: string }) => {
     if (!replyMessage.trim() || !replyTicket) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/faculty/helpdesk/tickets/reply", {
+      const res = await axios.post("https://smart-campus-backend-app.onrender.com/api/faculty/helpdesk/tickets/reply", {
         ticketCustomId: replyTicket.id,
         message: replyMessage
       }, {

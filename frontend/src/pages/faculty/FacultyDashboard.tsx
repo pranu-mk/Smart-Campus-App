@@ -37,7 +37,7 @@ const Dashboard = ({ theme = "dark" }: DashboardProps) => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/faculty/stats", {
+        const response = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/stats", {
           headers: { Authorization: `Bearer ${token}` }
         });
         

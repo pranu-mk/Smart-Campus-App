@@ -218,13 +218,13 @@ const MyComplaints = () => {
                     <p className="text-[10px] uppercase font-bold text-gray-400 mb-2">Attached Evidence</p>
                     <div className="relative group rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                       <img 
-                        src={`http://localhost:5000/${selectedComplaint.file_path.replace(/\\/g, '/')}`} 
+                        src={`https://smart-campus-backend-app.onrender.com/${selectedComplaint.file_path.replace(/\\/g, '/')}`} 
                         alt="Evidence"
                         className="w-full h-auto max-h-60 object-contain hover:scale-105 transition-transform duration-300"
                         onError={(e) => (e.currentTarget.style.display = 'none')}
                       />
                       <a 
-                        href={`http://localhost:5000/${selectedComplaint.file_path.replace(/\\/g, '/')}`} 
+                        href={`https://smart-campus-backend-app.onrender.com/${selectedComplaint.file_path.replace(/\\/g, '/')}`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-bold gap-2"

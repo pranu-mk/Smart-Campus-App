@@ -32,7 +32,7 @@ const TopHeader = ({ theme, onThemeChange }: TopHeaderProps) => {
   const fetchNotifications = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/notifications", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/notifications", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) setNotifications(res.data.data);
@@ -52,7 +52,7 @@ const TopHeader = ({ theme, onThemeChange }: TopHeaderProps) => {
   const markAsRead = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/faculty/notifications/${id}/read`, {}, {
+      await axios.put(`https://smart-campus-backend-app.onrender.com/api/faculty/notifications/${id}/read`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchNotifications();

@@ -40,7 +40,7 @@ export default function Footer() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/subs/subscribe', {
+      const response = await fetch('https://smart-campus-backend-app.onrender.com/api/subs/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

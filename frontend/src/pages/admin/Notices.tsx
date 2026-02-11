@@ -8,7 +8,7 @@ import { departments } from '@/data/admin/dummyData';
 import axios from 'axios';
 import { toast } from '@/hooks/use-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://smart-campus-backend-app.onrender.com/api';
 
 export function NoticesPage() {
   const [noticeList, setNoticeList] = useState<any[]>([]);

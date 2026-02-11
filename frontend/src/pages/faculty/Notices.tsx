@@ -62,7 +62,7 @@ const Notices = ({ theme = "dark" }: { theme?: string }) => {
   const fetchNotices = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/notices", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/notices", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -104,11 +104,11 @@ const Notices = ({ theme = "dark" }: { theme?: string }) => {
 
       let response;
       if (editingId) {
-        response = await axios.put(`http://localhost:5000/api/faculty/notices/${editingId}`, payload, {
+        response = await axios.put(`https://smart-campus-backend-app.onrender.com/api/faculty/notices/${editingId}`, payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        response = await axios.post("http://localhost:5000/api/faculty/notices", payload, {
+        response = await axios.post("https://smart-campus-backend-app.onrender.com/api/faculty/notices", payload, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
@@ -134,7 +134,7 @@ const Notices = ({ theme = "dark" }: { theme?: string }) => {
     if (!window.confirm("Are you sure you want to delete this notice?")) return;
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.delete(`http://localhost:5000/api/faculty/notices/${id}`, {
+      const res = await axios.delete(`https://smart-campus-backend-app.onrender.com/api/faculty/notices/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {

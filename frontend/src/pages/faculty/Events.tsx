@@ -89,7 +89,7 @@ const Events = ({ theme = "dark" }: EventsProps) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/events", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/events", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -110,7 +110,7 @@ const Events = ({ theme = "dark" }: EventsProps) => {
     setLoadingHistory(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/faculty/events/${event.id}/history`, {
+      const res = await axios.get(`https://smart-campus-backend-app.onrender.com/api/faculty/events/${event.id}/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEventHistory(res.data.data || []);
@@ -124,7 +124,7 @@ const Events = ({ theme = "dark" }: EventsProps) => {
   const handleStatusUpdate = async (eventId: string, newStatus: string, remarks: string) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/faculty/events/${eventId}/status`, 
+      const res = await axios.put(`https://smart-campus-backend-app.onrender.com/api/faculty/events/${eventId}/status`, 
         { status: newStatus, remarks },
         { headers: { Authorization: `Bearer ${token}` }}
       );

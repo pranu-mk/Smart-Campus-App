@@ -82,7 +82,7 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/assigned-complaints", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/assigned-complaints", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -102,7 +102,7 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
   const handleActionSubmit = async (complaintId: string, actionData: { status: string, response: string, note: string, priority?: string }) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/faculty/assigned-complaints/${complaintId}`, 
+      const res = await axios.put(`https://smart-campus-backend-app.onrender.com/api/faculty/assigned-complaints/${complaintId}`, 
         { 
           status: actionData.status, 
           priority: actionData.priority, 

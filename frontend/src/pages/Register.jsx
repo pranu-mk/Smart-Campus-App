@@ -115,7 +115,7 @@ export default function Register() {
 
     try {
       const endpoint = mode === 'register' ? '/register' : '/login';
-      const url = `http://localhost:5000/api/auth${endpoint}`;
+      const url = `https://smart-campus-backend-app.onrender.com/api/auth${endpoint}`;
 
       const payload = mode === 'register' ? {
         role: role,

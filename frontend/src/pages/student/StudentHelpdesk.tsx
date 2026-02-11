@@ -52,7 +52,7 @@ const Helpdesk = () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("token"); // Assuming you store JWT here
-      const response = await axios.get("http://localhost:5000/api/student/helpdesk/tickets", {
+      const response = await axios.get("https://smart-campus-backend-app.onrender.com/api/student/helpdesk/tickets", {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -76,7 +76,7 @@ const Helpdesk = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post("http://localhost:5000/api/student/helpdesk/tickets", newTicket, {
+      const response = await axios.post("https://smart-campus-backend-app.onrender.com/api/student/helpdesk/tickets", newTicket, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -98,7 +98,7 @@ const Helpdesk = () => {
     try {
       const token = localStorage.getItem("token");
       // Use the internal MySQL db_id to target the correct record
-      const response = await axios.post(`http://localhost:5000/api/student/helpdesk/tickets/${db_id}/messages`, {
+      const response = await axios.post(`https://smart-campus-backend-app.onrender.com/api/student/helpdesk/tickets/${db_id}/messages`, {
         message: newMessage
       }, {
         headers: { Authorization: `Bearer ${token}` }

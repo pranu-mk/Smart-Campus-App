@@ -73,7 +73,7 @@ const Students = ({ theme = "dark" }: StudentsProps) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("http://localhost:5000/api/faculty/students", {
+      const res = await axios.get("https://smart-campus-backend-app.onrender.com/api/faculty/students", {
         headers: { Authorization: `Bearer ${token}` },
         params: { search: searchTerm, department: departmentFilter }
       });
@@ -95,7 +95,7 @@ const Students = ({ theme = "dark" }: StudentsProps) => {
     setLoadingHistory(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(`http://localhost:5000/api/faculty/students/${student.id}/history`, {
+      const res = await axios.get(`https://smart-campus-backend-app.onrender.com/api/faculty/students/${student.id}/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {

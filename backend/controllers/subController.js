@@ -30,7 +30,7 @@ exports.subscribe = async (req, res) => {
         await db.query('INSERT INTO email_subscribers (email) VALUES (?)', [email]);
         
         // Use the email as a unique identifier for the unsubscribe link
-        const unsubscribeLink = `http://localhost:5000/api/subs/unsubscribe?email=${email}`;
+        const unsubscribeLink = `https://smart-campus-backend-app.onrender.com/api/subs/unsubscribe?email=${email}`;
 
         const mailOptions = {
             from: process.env.EMAIL_USER,
@@ -90,7 +90,7 @@ exports.addUpdate = async (req, res) => {
         
         // Loop through each subscriber to give them their own unsubscribe link
         for (let sub of subscribers) {
-            const unsubscribeLink = `http://localhost:5000/api/subs/unsubscribe?email=${sub.email}`;
+            const unsubscribeLink = `https://smart-campus-backend-app.onrender.com/api/subs/unsubscribe?email=${sub.email}`;
             await transporter.sendMail({
                 from: process.env.EMAIL_USER,
                 to: sub.email,

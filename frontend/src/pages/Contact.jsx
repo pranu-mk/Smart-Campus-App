@@ -75,7 +75,7 @@ export default function Contact() {
     
     try {
       // Connect to your backend route
-      const response = await axios.post('http://localhost:5000/api/contact/send-sms', formData);
+      const response = await axios.post('https://smart-campus-backend-app.onrender.com/api/contact/send-sms', formData);
       
       if (response.data.success) {
         toast.success('Thank you! I have received your message via SMS.');
