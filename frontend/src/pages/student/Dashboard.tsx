@@ -1,243 +1,274 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { X, MessageSquare, Clock, CheckCircle, AlertCircle, Send, User } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { useTheme } from "@/context/ThemeContext";
+import { useState, useEffect } from "react";
+import { 
+  FileText, Clock, Loader2, CheckCircle, 
+  MessageSquarePlus, HelpCircle, Bot,
+  Calendar, MapPin, ChevronRight, Users, Bell
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-interface Complaint {
-  id: string;
-  category: string;
-  subject: string;
-  status: "Pending" | "In-Progress" | "Resolved";
-  date: string;
-  description?: string;
-  assignedTo?: string;
-  timeline?: { status: string; date: string; note: string }[];
-  comments?: { user: string; message: string; time: string }[];
-}
+import MainLayout from "@/components/layout/student/MainLayout";
+import TopNavbar from "@/components/layout/student/TopNavbar";
+import StatCard from "@/components/dashboard/students/StatCard";
+import QuickActionCard from "@/components/dashboard/students/QuickActionCard";
+import ComplaintsTable from "@/components/dashboard/students/ComplaintsTable";
+import ComplaintChart from "@/components/dashboard/students/ComplaintChart";
+import NoticesPreview from "@/components/dashboard/students/NoticesPreview";
+import ComplaintDetailModal from "@/components/dashboard/students/ComplaintDetailModal";
+import PlacementTicker from "@/components/dashboard/students/PlacementTicker";
 
-interface ComplaintDetailModalProps {
-  complaint: Complaint;
-  onClose: () => void;
-}
+import { useStudentDashboardTheme } from "@/context/StudentDashboardThemeContext";
+import { dashboardAPI } from "@/modules/student/services/api";
 
-const ComplaintDetailModal = ({ complaint, onClose }: ComplaintDetailModalProps) => {
-  const { theme } = useTheme();
-  const [newComment, setNewComment] = useState("");
-  const [activeTab, setActiveTab] = useState<"details" | "timeline" | "comments">("details");
+const quickActions = [
+  { title: "Raise Complaint", description: "Submit a new issue", icon: MessageSquarePlus, path: "/dashboard/student/raise-complaint" },
+  { title: "My Complaints", description: "Track your complaints", icon: FileText, path: "/dashboard/student/my-complaints" },
+  { title: "Student Helpdesk", description: "Get help with queries", icon: HelpCircle, path: "/dashboard/student/helpdesk" },
+  { title: "Campus Chatbot", description: "24/7 AI assistance", icon: Bot, path: "/dashboard/student/chatbot" },
+];
 
-  const defaultTimeline = [
-    { status: "Submitted", date: complaint.date, note: "Complaint registered successfully" },
-    { status: "Under Review", date: "Jan 19, 2026", note: "Assigned to department" },
-    ...(complaint.status === "In-Progress" ? [{ status: "In Progress", date: "Jan 20, 2026", note: "Being processed by faculty" }] : []),
-    ...(complaint.status === "Resolved" ? [{ status: "Resolved", date: "Jan 21, 2026", note: "Issue has been resolved" }] : []),
+const Dashboard = () => {
+  const { theme } = useStudentDashboardTheme();
+  const navigate = useNavigate();
+  const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [dashboardData, setDashboardData] = useState<any>({
+    stats: { total: 0, pending: 0, inProgress: 0, resolved: 0 },
+    recentComplaints: [],
+    notices: [],
+    upcomingEvents: [],
+    joinedClubs: [],
+    notifications: [],
+    unreadCount: 0,
+    // Default placeholder placements until backend is connected
+    placements: [
+      { company_name: "Google", role: "SDE-1", package_lpa: "32.00", deadline: "2026-10-25" },
+      { company_name: "Microsoft", role: "Data Analyst", package_lpa: "28.50", deadline: "2026-10-28" },
+      { company_name: "NVIDIA", role: "AI Research", package_lpa: "35.00", deadline: "2026-11-05" }
+    ],
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        // We call the main dashboard data and placement data
+        const [dashResponse, placementResponse] = await Promise.allSettled([
+          dashboardAPI.getDashboardData(),
+          dashboardAPI.getPlacements() // You can add this to your API service next
+        ]);
+        
+        const actualData = dashResponse.status === 'fulfilled' ? (dashResponse.value?.data || dashResponse.value) : null;
+        const placementData = placementResponse.status === 'fulfilled' ? (placementResponse.value?.data || []) : dashboardData.placements;
+        
+        if (actualData) {
+          setDashboardData({ 
+            ...actualData, 
+            placements: placementData.length > 0 ? placementData : dashboardData.placements 
+          });
+        }
+      } catch (error: any) {
+        console.error('Dashboard fetch error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const stats = [
+    { title: "Total Complaints", value: dashboardData?.stats?.total || 0, icon: FileText, variant: "blue" as const },
+    { title: "Pending", value: dashboardData?.stats?.pending || 0, icon: Clock, variant: "yellow" as const },
+    { title: "In-Progress", value: dashboardData?.stats?.inProgress || 0, icon: Loader2, variant: "orange" as const },
+    { title: "Resolved", value: dashboardData?.stats?.resolved || 0, icon: CheckCircle, variant: "green" as const },
   ];
 
-  const defaultComments = [
-    { user: "Faculty", message: "We have received your complaint and will look into it.", time: "Jan 19, 2026 10:30 AM" },
-    { user: "You", message: "Thank you for the quick response.", time: "Jan 19, 2026 11:00 AM" },
-  ];
-
-  const timeline = complaint.timeline || defaultTimeline;
-  const comments = complaint.comments || defaultComments;
-
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
-    toast({
-      title: "Comment Added",
-      description: "Your comment has been added to the complaint.",
-    });
-    setNewComment("");
+  const handleViewComplaint = (id: string) => {
+    const complaint = dashboardData?.recentComplaints?.find((c: any) => c.complaint_id === id);
+    if (complaint) setSelectedComplaint(complaint);
   };
 
-  const getModalClasses = () => {
-    switch (theme) {
-      case "dark":
-        return "bg-[#1a1a2e] text-white";
-      case "fancy":
-        return "bg-gradient-to-br from-[#16213e] to-[#1a1a2e] text-white border border-[#4f6fdc]/30";
-      default:
-        return "bg-white text-[#1f2937]";
-    }
-  };
-
-  const getTabClasses = (isActive: boolean) => {
-    if (isActive) {
-      return theme === "fancy" 
-        ? "bg-gradient-to-r from-[#4f6fdc] to-[#9333ea] text-white"
-        : "bg-[#4f6fdc] text-white";
-    }
-    return theme === "light" ? "bg-gray-100 text-[#6b7280]" : "bg-white/10 text-white/70";
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className={`rounded-2xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-hidden ${getModalClasses()}`}
-      >
-        {/* Header */}
-        <div className={`p-6 border-b ${theme === "light" ? "border-gray-100" : "border-white/10"}`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="text-[#4f6fdc] font-semibold">{complaint.id}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  complaint.status === "Pending" ? "badge-pending" :
-                  complaint.status === "In-Progress" ? "badge-progress" : "badge-resolved"
-                }`}>
-                  {complaint.status}
-                </span>
-              </div>
-              <h2 className={`text-xl font-semibold mt-2 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                {complaint.subject}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-xl ${theme === "light" ? "hover:bg-gray-100" : "hover:bg-white/10"}`}
-            >
-              <X className="w-5 h-5" />
-            </button>
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-[#4f6fdc] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your data...</p>
           </div>
         </div>
+      </MainLayout>
+    );
+  }
 
-        {/* Tabs */}
-        <div className="flex gap-2 p-4">
-          {(["details", "timeline", "comments"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${getTabClasses(activeTab === tab)}`}
-            >
-              {tab}
-            </button>
+  return (
+    <MainLayout>
+      <TopNavbar
+  title="Student Dashboard"
+  subtitle={`Welcome back, ${dashboardData?.user?.full_name || 'Student'}`}
+  notifications={dashboardData?.notifications || []}
+/>
+
+      {/* PLACEMENT TICKER COMPONENT */}
+      <PlacementTicker placements={dashboardData.placements} />
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {stats.map((stat, index) => (
+          <StatCard key={stat.title} {...stat} delay={index * 0.1} />
+        ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-6">
+        <h2 className={`text-lg font-semibold mb-4 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickActions.map((action, index) => (
+            <QuickActionCard key={action.title} {...action} delay={0.2 + index * 0.1} />
           ))}
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="p-6 pt-0 max-h-[50vh] overflow-y-auto">
-          {activeTab === "details" && (
-            <div className="space-y-4">
-              <div>
-                <label className={`text-sm font-medium ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
-                  Category
-                </label>
-                <p className={`mt-1 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                  {complaint.category}
-                </p>
-              </div>
-              <div>
-               
-              </div>
-              <div>
-                <label className={`text-sm font-medium ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
-                  Description
-                </label>
-                <p className={`mt-1 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                  {complaint.description || `This is a ${complaint.category.toLowerCase()} related issue regarding ${complaint.subject.toLowerCase()}. The student has reported this matter for resolution.`}
-                </p>
-              </div>
-              <div>
-                
-              </div>
+      {/* Complaints Table */}
+      <div className="grid grid-cols-1 gap-6">
+        <ComplaintsTable
+          complaints={dashboardData?.recentComplaints || []}
+          onView={handleViewComplaint}
+        />
+      </div>
+
+      {/* Middle Section: Chart and Previews */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="flex flex-col">
+          <ComplaintChart stats={dashboardData?.stats} />
+        </div>
+        
+        <div className="flex flex-col gap-6">
+          {/* 1. UPCOMING EVENTS */}
+          <div className={`p-6 rounded-2xl shadow-card transition-all duration-300 border ${
+            theme === "light" 
+              ? "bg-blue-50/30 border-blue-100 shadow-blue-100/20" 
+              : theme === "dark"
+                ? "bg-[#1e293b] border-blue-900/50"
+                : "bg-gradient-to-br from-[#1e1e38] to-[#111122] border-blue-500/20 shadow-blue-500/5"
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-lg font-semibold flex items-center gap-2 ${
+                theme === "light" ? "text-blue-700" : "text-blue-400"
+              }`}>
+                <Calendar className="w-5 h-5" /> Upcoming Events
+              </h2>
+              <button 
+                onClick={() => navigate("/dashboard/student/events")}
+                className="text-[#4f6fdc] text-sm font-medium hover:underline flex items-center"
+              >
+                View All <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          )}
-
-          {activeTab === "timeline" && (
-            <div className="relative">
-              <div className={`absolute left-4 top-0 bottom-0 w-0.5 ${theme === "light" ? "bg-gray-200" : "bg-white/20"}`} />
-              <div className="space-y-6">
-                {timeline.map((item, index) => (
-                  <div key={index} className="flex gap-4 relative">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${
-                      index === timeline.length - 1 
-                        ? "bg-[#4f6fdc] text-white" 
-                        : theme === "light" ? "bg-gray-100" : "bg-white/10"
-                    }`}>
-                      {item.status === "Resolved" ? <CheckCircle className="w-4 h-4" /> :
-                       item.status === "In Progress" ? <AlertCircle className="w-4 h-4" /> :
-                       <Clock className="w-4 h-4" />}
+            
+            <div className="space-y-3">
+              {dashboardData?.upcomingEvents?.length > 0 ? (
+                dashboardData.upcomingEvents.slice(0, 2).map((event: any) => (
+                  <div key={event.id} className={`p-3 rounded-xl border transition-colors ${
+                    theme === "light" ? "bg-white border-blue-50 hover:bg-blue-50/50" : "bg-black/20 border-white/5 hover:bg-black/40"
+                  }`}>
+                    <div className="flex justify-between items-start">
+                      <h3 className={`text-sm font-medium ${theme === "light" ? "text-gray-800" : "text-gray-200"}`}>{event.title}</h3>
+                      {event.is_registered && (
+                        <span className="text-[10px] bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">
+                          Registered
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <p className={`font-medium ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                        {item.status}
-                      </p>
-                      <p className={`text-sm ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
-                        {item.date}
-                      </p>
-                      <p className={`text-sm mt-1 ${theme === "light" ? "text-[#6b7280]" : "text-white/70"}`}>
-                        {item.note}
-                      </p>
+                    <div className="flex gap-3 mt-1 text-[10px] text-gray-500">
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3"/>{new Date(event.event_date).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3"/>{event.location || "TBA"}</span>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-500 text-center py-2">No upcoming events scheduled.</p>
+              )}
             </div>
-          )}
+          </div>
 
-          {activeTab === "comments" && (
-            <div className="space-y-4">
-              {comments.map((comment, index) => (
-                <div 
-                  key={index} 
-                  className={`p-4 rounded-xl ${
-                    comment.user === "You" 
-                      ? "bg-[#4f6fdc]/10 ml-8" 
-                      : theme === "light" ? "bg-gray-50 mr-8" : "bg-white/5 mr-8"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <User className="w-4 h-4 text-[#4f6fdc]" />
-                    <span className={`text-sm font-medium ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                      {comment.user}
-                    </span>
-                    <span className={`text-xs ${theme === "light" ? "text-[#6b7280]" : "text-white/50"}`}>
-                      {comment.time}
-                    </span>
+          {/* 2. STUDENT CLUBS */}
+          <div className={`p-6 rounded-2xl shadow-card transition-all duration-300 border ${
+            theme === "light" 
+              ? "bg-emerald-50/30 border-emerald-100 shadow-emerald-100/20" 
+              : theme === "dark"
+                ? "bg-[#064e3b]/10 border-emerald-900/50"
+                : "bg-gradient-to-br from-[#064e3b]/20 to-[#022c22]/30 border-emerald-500/20 shadow-emerald-500/5"
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-lg font-semibold flex items-center gap-2 ${
+                theme === "light" ? "text-emerald-700" : "text-emerald-400"
+              }`}>
+                <Users className="w-5 h-5" /> My Memberships
+              </h2>
+              <button 
+                onClick={() => navigate("/dashboard/student/clubs")}
+                className="text-emerald-600 text-sm font-medium hover:underline flex items-center"
+              >
+                Explore <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {dashboardData?.joinedClubs?.length > 0 ? (
+                dashboardData.joinedClubs.slice(0, 2).map((club: any) => (
+                  <div key={club.id} className={`p-3 rounded-xl border transition-colors ${
+                    theme === "light" ? "bg-white border-emerald-50 hover:bg-emerald-50/50" : "bg-black/20 border-white/5 hover:bg-black/40"
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{club.image_emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`text-sm font-medium truncate ${theme === "light" ? "text-gray-800" : "text-gray-200"}`}>{club.name}</h3>
+                        <p className="text-[10px] text-gray-500 uppercase tracking-tight">{club.category}</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className={`text-sm ${theme === "light" ? "text-[#6b7280]" : "text-white/70"}`}>
-                    {comment.message}
-                  </p>
-                </div>
-              ))}
-              
-              {complaint.status !== "Resolved" && (
-                <div className="flex gap-2 mt-4">
-                  <input
-                    type="text"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add a comment..."
-                    className={`flex-1 px-4 py-3 rounded-xl border outline-none ${
-                      theme === "light" 
-                        ? "border-gray-200 focus:border-[#4f6fdc] text-[#1f2937]" 
-                        : "border-white/20 bg-white/5 focus:border-[#4f6fdc] text-white"
-                    }`}
-                  />
-                  <button
-                    onClick={handleAddComment}
-                    className="px-4 py-3 rounded-xl bg-[#4f6fdc] text-white hover:bg-[#4560c7] transition-colors"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
+                ))
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-xs text-gray-500">Not joined any clubs yet.</p>
                 </div>
               )}
             </div>
-          )}
+          </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+
+      {/* 3. LATEST NOTICES */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-4 px-2">
+          <h2 className={`text-lg font-semibold flex items-center gap-2 ${
+            theme === "light" ? "text-amber-700" : "text-amber-400"
+          }`}>
+            <Bell className="w-5 h-5" /> Latest Announcements
+          </h2>
+          <button 
+            onClick={() => navigate("/dashboard/student/notices")}
+            className="text-amber-600 text-sm font-medium hover:underline flex items-center gap-1"
+          >
+            View All <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+        <NoticesPreview notices={dashboardData?.notices || []} />
+      </div>
+
+      {/* Modals */}
+      {selectedComplaint && (
+        <ComplaintDetailModal
+          complaint={selectedComplaint}
+          onClose={() => setSelectedComplaint(null)}
+        />
+      )}
+    </MainLayout>
   );
 };
 
-export default ComplaintDetailModal;
+export default Dashboard;
