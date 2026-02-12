@@ -137,12 +137,7 @@ const ComplaintDetailModal = ({ complaint, onClose }: ComplaintDetailModalProps)
                 </p>
               </div>
               <div>
-                <label className={`text-sm font-medium ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
-                  Date Submitted
-                </label>
-                <p className={`mt-1 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                  {complaint.date}
-                </p>
+               
               </div>
               <div>
                 <label className={`text-sm font-medium ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
@@ -153,12 +148,7 @@ const ComplaintDetailModal = ({ complaint, onClose }: ComplaintDetailModalProps)
                 </p>
               </div>
               <div>
-                <label className={`text-sm font-medium ${theme === "light" ? "text-[#6b7280]" : "text-white/60"}`}>
-                  Assigned To
-                </label>
-                <p className={`mt-1 ${theme === "light" ? "text-[#1f2937]" : "text-white"}`}>
-                  {complaint.assignedTo || "Prof. Sharma (Department Head)"}
-                </p>
+               
               </div>
             </div>
           )}
