@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Filter, Eye, UserPlus, X, Send, ChevronRight
+  Search, UserPlus, X, ChevronRight
 } from 'lucide-react';
 import { NeonCard } from '@/components/ui/NeonCard';
 import { GlowButton } from '@/components/ui/GlowButton';
@@ -31,13 +31,19 @@ export function ComplaintsPage() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
+
       const [compRes, facRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/complaints`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API_URL}/admin/faculty`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API_URL}/admin/complaints`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/admin/faculty`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
 
       setComplaintList(Array.isArray(compRes?.data?.data) ? compRes.data.data : []);
       setFacultyList(Array.isArray(facRes?.data?.data) ? facRes.data.data : []);
+
     } catch (err) {
       console.error("Data fetch error:", err);
     } finally {
@@ -48,8 +54,10 @@ export function ComplaintsPage() {
   const handleUpdate = async (id: number, payload: any) => {
     if (processing) return;
     setProcessing(true);
+
     try {
       const token = localStorage.getItem('token');
+
       await axios.patch(`${API_URL}/admin/complaints/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -60,12 +68,16 @@ export function ComplaintsPage() {
         setSelectedComplaint((prev: any) => ({
           ...prev,
           ...payload,
-          internalNotes: payload.internal_notes !== undefined ? payload.internal_notes : prev.internalNotes,
+          internalNotes:
+            payload.internal_notes !== undefined
+              ? payload.internal_notes
+              : prev.internalNotes,
           status: payload.status || prev.status || 'Pending'
         }));
       }
 
       if (payload.assigned_to) setShowAssignModal(false);
+
     } catch (err) {
       console.error("Update error:", err);
     } finally {
@@ -79,7 +91,9 @@ export function ComplaintsPage() {
       (c?.studentName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (c?.customId || "").toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || c?.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'all' || c?.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -92,13 +106,8 @@ export function ComplaintsPage() {
 
   return (
     <div className="space-y-6 text-white">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold font-orbitron gradient-text-aurora">Complaint Management</h1>
-          <p className="text-muted-foreground mt-1">Command Center</p>
-        </div>
-      </motion.div>
 
+      {/* FILTER BUTTONS */}
       <div className="flex flex-wrap gap-2">
         {['all', 'Pending', 'In-Progress', 'Resolved'].map((s) => (
           <button
@@ -119,10 +128,13 @@ export function ComplaintsPage() {
         ))}
       </div>
 
+      {/* LIST */}
       <div className="space-y-4">
         {filteredComplaints.map((c, i) => {
           const safeStatus = c?.status || 'Pending';
-          const safePriority = c?.priority ? c.priority.toLowerCase() : 'medium';
+          const safePriority = c?.priority
+            ? c.priority.toLowerCase()
+            : 'medium';
 
           return (
             <motion.div
@@ -140,25 +152,25 @@ export function ComplaintsPage() {
                   setShowDetailModal(true);
                 }}
               >
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4 p-2">
-                  <div className="flex items-center gap-4 flex-1">
+                <div className="flex justify-between items-center p-4">
+                  <div className="flex items-center gap-4">
                     <NeonAvatar
                       initials={c?.studentName?.charAt(0) || 'S'}
-                      glowColor={safeStatus === 'Escalated' ? 'pink' : 'cyan'}
                     />
-                    <div className="flex-1">
+                    <div>
                       <div className="flex gap-2">
                         <span className="text-xs text-neon-cyan font-mono">
                           {c?.customId || 'N/A'}
                         </span>
                         <PriorityChip priority={safePriority} />
                       </div>
-                      <h3 className="font-semibold text-white mt-1">
-                        {c?.title || 'Untitled Complaint'}
+                      <h3 className="font-semibold">
+                        {c?.title || 'Untitled'}
                       </h3>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+
+                  <div className="flex items-center gap-3">
                     <StatusBadge status={safeStatus} />
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
@@ -169,48 +181,88 @@ export function ComplaintsPage() {
         })}
       </div>
 
-      {/* MODALS REMAIN SAME (safe due to default values above) */}
+      {/* DETAIL MODAL */}
       <AnimatePresence>
         {showDetailModal && selectedComplaint && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setShowDetailModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-3xl glass rounded-2xl neon-border overflow-hidden p-6 space-y-6 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex justify-between border-b border-border/50 pb-4">
-                <h2 className="text-xl font-bold font-orbitron text-white">
-                  {selectedComplaint?.title || 'Complaint'}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+            <motion.div className="bg-slate-900 p-6 rounded-2xl w-full max-w-3xl space-y-6">
+
+              <div className="flex justify-between">
+                <h2 className="text-xl font-bold">
+                  {selectedComplaint?.title}
                 </h2>
-                <X className="cursor-pointer text-white" onClick={() => setShowDetailModal(false)} />
+                <X onClick={() => setShowDetailModal(false)} />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-white">
-                <div>
-                  <p className="text-muted-foreground uppercase text-[10px]">Student</p>
-                  {selectedComplaint?.studentName || 'Unknown'}
-                </div>
-                <div>
-                  <p className="text-muted-foreground uppercase text-[10px]">Category</p>
-                  {selectedComplaint?.category || 'N/A'}
-                </div>
-                <div>
-                  <p className="text-muted-foreground uppercase text-[10px]">Assigned</p>
-                  {selectedComplaint?.facultyName || 'Unassigned'}
-                </div>
-                <div>
-                  <StatusBadge status={selectedComplaint?.status || 'Pending'} />
-                </div>
-              </div>
+              {/* STATUS DROPDOWN */}
+              <select
+                value={selectedComplaint?.status || 'Pending'}
+                onChange={(e) =>
+                  handleUpdate(selectedComplaint.id, {
+                    status: e.target.value
+                  })
+                }
+                className="bg-black border border-white/10 rounded p-2"
+              >
+                <option value="Pending">Pending</option>
+                <option value="In-Progress">In-Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Escalated">Escalated</option>
+                <option value="Closed">Closed</option>
+              </select>
+
+              {/* ASSIGN BUTTON */}
+              <GlowButton
+                variant="purple"
+                icon={<UserPlus className="w-4 h-4" />}
+                onClick={() => setShowAssignModal(true)}
+              >
+                Assign Faculty
+              </GlowButton>
+
+              {/* SAVE NOTE */}
+              <GlowButton
+                variant="cyan"
+                onClick={() =>
+                  handleUpdate(selectedComplaint.id, {
+                    internal_notes: adminNote
+                  })
+                }
+              >
+                Save Note
+              </GlowButton>
+
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* ASSIGN MODAL */}
+      <AnimatePresence>
+        {showAssignModal && selectedComplaint && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+            <motion.div className="bg-slate-900 p-6 rounded-2xl w-full max-w-md space-y-4">
+              <h2 className="text-lg font-bold">Assign Faculty</h2>
+
+              {facultyList.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() =>
+                    handleUpdate(selectedComplaint.id, {
+                      assigned_to: f.id,
+                      status: 'In-Progress'
+                    })
+                  }
+                  className="w-full text-left p-3 border border-white/10 rounded hover:bg-white/5"
+                >
+                  {f.name}
+                </button>
+              ))}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
