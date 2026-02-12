@@ -129,18 +129,20 @@ const Sidebar = () => {
       <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         <ul className="space-y-1">
           {(menuItems || []).filter(Boolean).map((item) => {
-            const Icon = item?.icon; // ✅ SAFE ICON EXTRACTION
-            const isActive = location.pathname === item?.path;
-            const isHovered = hoveredItem === item?.path;
+            if (!item) return null; // ✅ HARD PROTECTION
+
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+            const isHovered = hoveredItem === item.path;
 
             return (
               <motion.li
-                key={item?.path}
-                onHoverStart={() => setHoveredItem(item?.path)}
+                key={item.path}
+                onHoverStart={() => setHoveredItem(item.path)}
                 onHoverEnd={() => setHoveredItem(null)}
               >
                 <Link
-                  to={item?.path || "#"}
+                  to={item.path}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 relative ${
                     isActive
                       ? theme === "fancy"
@@ -166,8 +168,8 @@ const Sidebar = () => {
                     />
                   )}
 
-                  {/* ✅ SAFE ICON RENDER */}
-                  {Icon && (
+                  {/* ✅ SAFE ICON */}
+                  {Icon ? (
                     <Icon
                       className={`w-5 h-5 relative z-10 ${
                         isActive && theme !== "fancy"
@@ -175,10 +177,10 @@ const Sidebar = () => {
                           : ""
                       }`}
                     />
-                  )}
+                  ) : null}
 
                   <span className="text-sm relative z-10">
-                    {item?.label}
+                    {item.label}
                   </span>
                 </Link>
               </motion.li>
