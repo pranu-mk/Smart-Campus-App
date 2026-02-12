@@ -37,11 +37,11 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useStudentDashboardTheme();
-  const { user, logout } = useAuth(); 
+  const { user, logout } = useAuth();
+
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [imgError, setImgError] = useState(false);
 
-  // Reset image error state if the user object changes (e.g., new photo uploaded)
   useEffect(() => {
     setImgError(false);
   }, [user?.profile_picture]);
@@ -68,16 +68,25 @@ const Sidebar = () => {
       animate={{ x: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={`fixed left-0 top-0 h-screen w-64 rounded-r-3xl ${
-        theme === "light" ? "shadow-[4px_0_20px_rgba(79,111,220,0.15)]" : "shadow-sidebar"
+        theme === "light"
+          ? "shadow-[4px_0_20px_rgba(79,111,220,0.15)]"
+          : "shadow-sidebar"
       } z-50 flex flex-col overflow-hidden ${getSidebarClasses()}`}
     >
-      {/* Student Profile Card */}
-      <div className={`p-6 ${theme === "light" ? "border-b border-blue-200/30" : "border-b border-white/10"}`}>
+      {/* Profile Card */}
+      <div
+        className={`p-6 ${
+          theme === "light"
+            ? "border-b border-blue-200/30"
+            : "border-b border-white/10"
+        }`}
+      >
         <div className="flex items-center gap-4">
-          {/* Profile Image / Icon Circle */}
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-white/20 ${
-            theme === "fancy" ? "ring-2 ring-purple-400/30" : ""
-          }`}>
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 bg-white/20 ${
+              theme === "fancy" ? "ring-2 ring-purple-400/30" : ""
+            }`}
+          >
             {user?.profile_picture && !imgError ? (
               <img
                 src={user.profile_picture}
@@ -90,11 +99,13 @@ const Sidebar = () => {
             )}
           </div>
 
-          {/* Student Details */}
           <div className="min-w-0 flex-1">
             {user ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h3 className="text-white font-semibold text-sm truncate" title={user.full_name}>
+                <h3
+                  className="text-white font-semibold text-sm truncate"
+                  title={user.full_name}
+                >
                   {user.full_name || "Student"}
                 </h3>
                 <p className="text-white/70 text-[11px] truncate font-mono">
@@ -114,21 +125,22 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Navigation Menu */}
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         <ul className="space-y-1">
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const isHovered = hoveredItem === item.path;
+          {(menuItems || []).filter(Boolean).map((item) => {
+            const Icon = item?.icon; // ✅ SAFE ICON EXTRACTION
+            const isActive = location.pathname === item?.path;
+            const isHovered = hoveredItem === item?.path;
 
             return (
               <motion.li
-                key={item.path}
-                onHoverStart={() => setHoveredItem(item.path)}
+                key={item?.path}
+                onHoverStart={() => setHoveredItem(item?.path)}
                 onHoverEnd={() => setHoveredItem(null)}
               >
                 <Link
-                  to={item.path}
+                  to={item?.path || "#"}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 relative ${
                     isActive
                       ? theme === "fancy"
@@ -153,12 +165,21 @@ const Sidebar = () => {
                       transition={{ duration: 0.15 }}
                     />
                   )}
-                  <item.icon
-                    className={`w-5 h-5 relative z-10 ${
-                      isActive && theme !== "fancy" ? "text-[#4f6fdc]" : ""
-                    }`}
-                  />
-                  <span className="text-sm relative z-10">{item.label}</span>
+
+                  {/* ✅ SAFE ICON RENDER */}
+                  {Icon && (
+                    <Icon
+                      className={`w-5 h-5 relative z-10 ${
+                        isActive && theme !== "fancy"
+                          ? "text-[#4f6fdc]"
+                          : ""
+                      }`}
+                    />
+                  )}
+
+                  <span className="text-sm relative z-10">
+                    {item?.label}
+                  </span>
                 </Link>
               </motion.li>
             );
@@ -166,7 +187,7 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* Profile & Logout Section */}
+      {/* Profile + Logout */}
       <div className="p-4 border-t border-white/10">
         <Link
           to="/dashboard/student/profile"
@@ -180,13 +201,15 @@ const Sidebar = () => {
         >
           <User
             className={`w-5 h-5 ${
-              location.pathname === "/dashboard/student/profile" && theme !== "fancy"
+              location.pathname === "/dashboard/student/profile" &&
+              theme !== "fancy"
                 ? "text-[#4f6fdc]"
                 : ""
             }`}
           />
           <span className="text-sm">Profile</span>
         </Link>
+
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/90 hover:bg-red-500/20 transition-all duration-200 w-full"
