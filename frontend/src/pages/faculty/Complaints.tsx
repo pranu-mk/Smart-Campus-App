@@ -21,15 +21,15 @@ import { useToast } from "@/hooks/use-toast";
 import ComplaintDetailModal from "@/components/modals/faculty/ComplaintDetailModal";
 import type { Theme } from "@/pages/Index";
 
-// FIXED INTERFACE: Synchronized with Modal expectations and DB ENUMs
+// FIXED INTERFACE: Synchronized with DB ENUMs ('Pending','In-Progress','Resolved','Closed')
 export interface Complaint {
   id: string;
   studentName: string;
   department: string;
   type: string;
-  priority: "Low" | "Medium" | "High" | "Critical" | string; // Allows literal union + string fallback
+  priority: "Low" | "Medium" | "High" | string;
   date: string;
-  status: "Pending" | "In Progress" | "In-Progress" | "Resolved" | "Rejected" | "Escalated" | "Closed" | string;
+  status: "Pending" | "In-Progress" | "Resolved" | "Closed" | string;
   description?: string;
 }
 
@@ -41,17 +41,13 @@ const priorityColors: any = {
   Low: { bg: "#ECFDF5", text: "#059669", border: "#6EE7B7" },
   Medium: { bg: "#FFFBEB", text: "#D97706", border: "#FCD34D" },
   High: { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5" },
-  Critical: { bg: "#7F1D1D", text: "#FFFFFF", border: "#991B1B" },
   unknown: { bg: "#F3F4F6", text: "#6B7280", border: "#D1D5DB" }
 };
 
 const statusColors: any = {
   Pending: { bg: "#FFFBEB", text: "#D97706", border: "#FCD34D" },
-  "In Progress": { bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD" },
   "In-Progress": { bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD" },
   Resolved: { bg: "#ECFDF5", text: "#059669", border: "#6EE7B7" },
-  Rejected: { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5" },
-  Escalated: { bg: "#FDF2F8", text: "#DB2777", border: "#F9A8D4" },
   Closed: { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
   unknown: { bg: "#F3F4F6", text: "#6B7280", border: "#D1D5DB" }
 };
@@ -102,9 +98,13 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
   const handleActionSubmit = async (complaintId: string, actionData: { status: string, response: string, note: string, priority?: string }) => {
     try {
       const token = localStorage.getItem("token");
+      
+      // CRITICAL FIX: Map "In Progress" (UI) to "In-Progress" (DB ENUM)
+      const sanitizedStatus = actionData.status === "In Progress" ? "In-Progress" : actionData.status;
+
       const res = await axios.put(`https://smart-campus-backend-app.onrender.com/api/faculty/assigned-complaints/${complaintId}`, 
         { 
-          status: actionData.status, 
+          status: sanitizedStatus, 
           priority: actionData.priority, 
           facultyResponse: actionData.response, 
           internalNote: actionData.note 
@@ -118,8 +118,9 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
         setEditingComplaint(null);
         fetchComplaints(); 
       }
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to submit action", variant: "destructive" });
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || "Failed to submit action";
+      toast({ title: "Update Error", description: errorMsg, variant: "destructive" });
     }
   };
 
@@ -128,7 +129,12 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
       (complaint.studentName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (complaint.id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (complaint.type || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || complaint.status === statusFilter;
+    
+    // Account for both hyphenated and non-hyphenated in filtering
+    const matchesStatus = statusFilter === "all" || 
+      complaint.status === statusFilter || 
+      (statusFilter === "In-Progress" && complaint.status === "In Progress");
+
     const matchesPriority = priorityFilter === "all" || complaint.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
@@ -177,9 +183,9 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
               <SelectContent className={cardBg}>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="In-Progress">In Progress</SelectItem>
                 <SelectItem value="Resolved">Resolved</SelectItem>
-                <SelectItem value="Rejected">Rejected</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
               </SelectContent>
             </Select>
             <Select value={priorityFilter} onValueChange={setPriorityFilter}>
@@ -258,7 +264,7 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
 
       {selectedComplaint && (
         <ComplaintDetailModal 
-          complaint={selectedComplaint as any} // Forced cast to bypass local union strictness
+          complaint={selectedComplaint as any} 
           isOpen={!!selectedComplaint} 
           onClose={() => setSelectedComplaint(null)} 
           onSubmit={(data: any) => handleActionSubmit(selectedComplaint.id, data)}
@@ -277,9 +283,9 @@ const Complaints = ({ theme = "dark" }: ComplaintsProps) => {
                 <Select value={editingComplaint.status} onValueChange={(value: any) => setEditingComplaint({...editingComplaint, status: value})}>
                   <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
                   <SelectContent className={cardBg}>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="In-Progress">In Progress</SelectItem>
                     <SelectItem value="Resolved">Resolved</SelectItem>
-                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectItem value="Closed">Closed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

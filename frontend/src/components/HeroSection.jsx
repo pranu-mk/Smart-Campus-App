@@ -124,19 +124,7 @@ export default function HeroSection() {
             </motion.span>
           </motion.button>
           
-          <motion.button
-            className="btn-secondary text-lg px-8 py-4 flex items-center gap-3"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleWatchDemo} // External Link
-          >
-            <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </span>
-            Watch Demo
-          </motion.button>
+          
         </motion.div>
 
         {/* Stats Preview (Kept exactly as is) */}
