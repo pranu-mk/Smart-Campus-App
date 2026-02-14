@@ -44,7 +44,10 @@ exports.updateComplaintStatus = async (req, res) => {
         const { id } = req.params; // e.g., CMP-TEST-01
         const { status, priority, facultyResponse, internalNote } = req.body;
         const facultyId = req.user.id;
-
+  console.log("=== DEBUG UPDATE ===");
+        console.log("Faculty ID from token:", facultyId);
+        console.log("Complaint ID from request:", id);
+        
         // Atomic update using the new dedicated columns
         const [result] = await db.execute(
             `UPDATE complaints 
